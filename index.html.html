@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vyne — Turn Clicks into Clients</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --maroon:#7B1D2E;
+  --maroon-light:#9B2D42;
+  --maroon-dark:#4A0F1C;
+  --maroon-muted:rgba(123,29,46,0.12);
+  --maroon-border:rgba(123,29,46,0.3);
+  --gold:#C4A35A;
+  --cream:#F8F4EE;
+  --bg:#0C0608;
+  --bg2:#130A0D;
+  --bg3:#1A0E12;
+  --text:#F0EBE1;
+  --text-muted:#A89A8E;
+  --text-dim:#6B5E58;
+  --border:rgba(240,235,225,0.08);
+  --border-md:rgba(240,235,225,0.15);
+  --ff-display:'Cormorant Garamond',Georgia,serif;
+  --ff-body:'Jost',system-ui,sans-serif;
+}
+
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--ff-body);font-weight:300;font-size:16px;line-height:1.75;overflow-x:hidden;cursor:none}
+
+/* CURSOR */
+.cursor{position:fixed;width:8px;height:8px;background:var(--maroon-light);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%)}
+.cursor-ring{position:fixed;width:34px;height:34px;border:1px solid rgba(155,45,66,0.45);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .18s,height .18s,background .18s}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content:space-between;align-items:center;padding:1.1rem 5%;border-bottom:1px solid var(--border);background:rgba(12,6,8,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.nav-logo{font-family:var(--ff-display);font-size:1.9rem;font-weight:700;font-style:italic;color:var(--maroon-light);text-decoration:none;letter-spacing:0.02em;line-height:1}
+.nav-links{display:flex;gap:2.4rem;list-style:none}
+.nav-links a{font-size:0.76rem;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--text)}
+.nav-cta{font-size:0.74rem;font-weight:500;letter-spacing:0.13em;text-transform:uppercase;padding:0.6rem 1.4rem;border:1px solid var(--maroon-light);color:var(--maroon-light);background:transparent;text-decoration:none;transition:all .25s}
+.nav-cta:hover{background:var(--maroon);color:var(--cream);border-color:var(--maroon)}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:8rem 5% 7rem;overflow:hidden;position:relative}
+.hero-grid-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(123,29,46,0.03) 0px,rgba(123,29,46,0.03) 1px,transparent 1px,transparent 20%)}
+.hero-eyebrow{font-size:0.7rem;font-weight:500;letter-spacing:0.24em;text-transform:uppercase;color:var(--maroon-light);margin-bottom:2rem;display:flex;align-items:center;gap:1rem;animation:fadeUp .7s ease both}
+.hero-eyebrow::before{content:'';width:36px;height:1px;background:var(--maroon-light);display:block}
+.hero-h1{font-family:var(--ff-display);font-size:clamp(3.8rem,8.5vw,7.8rem);font-weight:300;line-height:1.02;margin-bottom:.15em;animation:fadeUp .7s .1s ease both}
+.hero-h1 em{font-style:italic;color:var(--maroon-light)}
+.hero-h1 .outline{display:block;font-weight:700;-webkit-text-stroke:1px rgba(240,235,225,0.14);color:transparent;font-size:clamp(4.2rem,10vw,9.2rem)}
+.hero-tagline{font-family:var(--ff-display);font-size:clamp(1.15rem,2.4vw,1.75rem);font-style:italic;font-weight:300;color:var(--gold);margin-bottom:2.8rem;animation:fadeUp .7s .18s ease both}
+.hero-desc{max-width:460px;color:var(--text-muted);font-size:.93rem;line-height:1.85;margin-bottom:2.8rem;animation:fadeUp .7s .26s ease both}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;animation:fadeUp .7s .34s ease both}
+.btn-primary{padding:.85rem 2.1rem;background:var(--maroon);color:var(--cream);font-size:.78rem;font-weight:500;letter-spacing:.13em;text-transform:uppercase;text-decoration:none;border:1px solid var(--maroon);transition:all .25s;display:inline-block}
+.btn-primary:hover{background:var(--maroon-light);border-color:var(--maroon-light)}
+.btn-ghost{padding:.85rem 2.1rem;background:transparent;color:var(--text-muted);font-size:.78rem;font-weight:500;letter-spacing:.13em;text-transform:uppercase;text-decoration:none;border:1px solid var(--border-md);transition:all .25s;display:inline-block}
+.btn-ghost:hover{border-color:var(--text-muted);color:var(--text)}
+.hero-stats{position:absolute;bottom:3rem;left:5%;display:flex;gap:3rem;animation:fadeUp .7s .5s ease both}
+.stat-num{font-family:var(--ff-display);font-size:2rem;font-weight:700;line-height:1;color:var(--text)}
+.stat-num span{color:var(--maroon-light)}
+.stat-label{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-top:.3rem}
+.hero-scroll{position:absolute;bottom:3rem;right:5%;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);writing-mode:vertical-rl;display:flex;align-items:center;gap:.7rem;animation:fadeUp .7s .6s ease both}
+.hero-scroll::after{content:'';width:1px;height:48px;background:linear-gradient(to bottom,var(--text-dim),transparent);animation:scrollPulse 1.8s ease infinite}
+
+/* MARQUEE */
+.marquee-wrap{border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;padding:1.1rem 0;background:var(--bg2);position:relative;z-index:2}
+.marquee-track{display:flex;white-space:nowrap;animation:marquee 24s linear infinite}
+.marquee-item{flex-shrink:0;padding:0 2.4rem;font-family:var(--ff-display);font-size:.85rem;font-style:italic;color:var(--text-dim);display:flex;align-items:center;gap:2.4rem}
+.marquee-item::after{content:'✦';color:var(--maroon-light);font-style:normal;font-size:.55rem}
+
+/* ABOUT */
+#about{padding:7rem 5%;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;background:var(--bg2)}
+.section-tag{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--maroon-light);margin-bottom:1.1rem;display:flex;align-items:center;gap:.8rem}
+.section-tag::before{content:'';width:22px;height:1px;background:var(--maroon-light);display:block}
+.about-title{font-family:var(--ff-display);font-size:clamp(2.1rem,3.8vw,3.2rem);font-weight:400;line-height:1.16;margin-bottom:1.4rem}
+.about-title em{font-style:italic;color:var(--maroon-light)}
+.about-text{color:var(--text-muted);line-height:1.9;font-size:.94rem;margin-bottom:1.3rem}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
+.about-card{background:var(--bg3);padding:1.8rem 1.5rem}
+.about-icon{font-size:1.2rem;color:var(--maroon-light);margin-bottom:.9rem}
+.about-card h4{font-family:var(--ff-display);font-size:1.05rem;font-weight:600;margin-bottom:.45rem}
+.about-card p{font-size:.83rem;color:var(--text-muted);line-height:1.75}
+
+/* SERVICES */
+#services{padding:7rem 5%}
+.sec-header{text-align:center;margin-bottom:4.5rem}
+.sec-header .section-tag{justify-content:center}
+.sec-header .section-tag::before,.sec-header .section-tag::after{content:'';width:22px;height:1px;background:var(--maroon-light);display:block}
+.section-title{font-family:var(--ff-display);font-size:clamp(2rem,4vw,3.1rem);font-weight:400}
+.section-title em{font-style:italic;color:var(--maroon-light)}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+.svc{background:var(--bg);padding:2.3rem 1.9rem;position:relative;overflow:hidden;transition:background .3s}
+.svc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--maroon);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.svc:hover{background:var(--bg2)}
+.svc:hover::after{transform:scaleX(1)}
+.svc-num{font-family:var(--ff-display);font-size:3.2rem;font-weight:700;color:var(--maroon-muted);line-height:1;margin-bottom:.8rem}
+.svc-title{font-family:var(--ff-display);font-size:1.28rem;font-weight:600;margin-bottom:.7rem;line-height:1.3}
+.svc-desc{font-size:.86rem;color:var(--text-muted);line-height:1.82}
+
+/* AUDIT — spans full width, slightly taller */
+.svc-audit{grid-column:1/-1;background:var(--bg2)}
+.svc-audit-inner{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem}
+.audit-badge{display:inline-block;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;padding:.18rem .55rem;background:rgba(123,29,46,0.18);border:1px solid var(--maroon-border);color:var(--maroon-light);margin-bottom:.7rem}
+.audit-list{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--border);list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.18rem 1rem}
+.audit-list li{font-size:.8rem;color:var(--text-muted);padding:.22rem 0;display:flex;align-items:flex-start;gap:.4rem;line-height:1.5}
+.audit-list li::before{content:'—';color:var(--maroon-light);font-size:.72rem;flex-shrink:0;margin-top:.18rem}
+
+/* RESULTS */
+#results{padding:7rem 5%;background:var(--maroon-dark);border-top:1px solid rgba(123,29,46,0.4);border-bottom:1px solid rgba(123,29,46,0.4)}
+#results .section-tag{color:var(--gold)}
+#results .section-tag::before,#results .section-tag::after{background:var(--gold)}
+#results .sec-header .section-tag::before,#results .sec-header .section-tag::after{background:var(--gold)}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.05);margin:3rem 0 3rem}
+.stat-box{background:rgba(12,6,8,.55);padding:2rem 1.5rem;text-align:center}
+.big-num{font-family:var(--ff-display);font-size:2.9rem;font-weight:700;color:var(--gold);line-height:1;margin-bottom:.25rem}
+.big-label{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
+.cases{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+.case-card{background:rgba(12,6,8,.6);border:1px solid rgba(255,255,255,0.06);overflow:hidden}
+.case-img-wrap{width:100%;height:170px;overflow:hidden;background:#1a0e12}
+.case-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.case-card:hover .case-img-wrap img{transform:scale(1.04)}
+.case-body{padding:1.4rem 1.5rem}
+.case-tag{font-size:.65rem;letter-spacing:.17em;text-transform:uppercase;color:var(--maroon-light);margin-bottom:.5rem}
+.case-name{font-family:var(--ff-display);font-size:1.15rem;font-weight:600;margin-bottom:.9rem}
+.case-stat{display:flex;align-items:baseline;gap:.35rem;margin-bottom:.25rem}
+.case-num{font-family:var(--ff-display);font-size:1.5rem;font-weight:700;color:var(--gold);line-height:1}
+.case-lbl{font-size:.78rem;color:var(--text-muted)}
+
+/* PROCESS */
+#process{padding:7rem 5%;background:var(--bg2)}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);position:relative;margin-top:4rem}
+.steps::before{content:'';position:absolute;top:27px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--maroon-border),transparent);z-index:0}
+.step{text-align:center;padding:0 .8rem;position:relative;z-index:1}
+.step-dot{width:54px;height:54px;border-radius:50%;border:1px solid var(--maroon-border);background:var(--bg2);display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-family:var(--ff-display);font-size:.95rem;font-weight:700;color:var(--maroon-light);transition:all .3s}
+.step:hover .step-dot{background:var(--maroon);border-color:var(--maroon);color:var(--cream)}
+.step-title{font-family:var(--ff-display);font-size:.98rem;font-weight:600;margin-bottom:.4rem}
+.step-desc{font-size:.78rem;color:var(--text-muted);line-height:1.72}
+
+/* TESTIMONIALS */
+#testimonials{padding:7rem 5%}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:4rem}
+.testi-card{border:1px solid var(--border);background:var(--bg2);padding:1.9rem;position:relative}
+.testi-card::before{content:'"';font-family:var(--ff-display);font-size:4.5rem;font-weight:700;color:var(--maroon);position:absolute;top:-.4rem;left:1.4rem;line-height:1;opacity:.38}
+.testi-stars{color:var(--gold);font-size:.72rem;letter-spacing:2px;margin-bottom:.9rem}
+.testi-text{font-family:var(--ff-display);font-size:1.02rem;font-style:italic;font-weight:300;line-height:1.72;color:var(--text);margin-bottom:1.4rem;padding-top:.8rem}
+.testi-author{display:flex;align-items:center;gap:.75rem}
+.testi-avatar{width:36px;height:36px;border-radius:50%;background:var(--maroon-muted);border:1px solid var(--maroon-border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:var(--maroon-light);flex-shrink:0}
+.testi-name{font-size:.83rem;font-weight:500}
+.testi-role{font-size:.72rem;color:var(--text-dim)}
+
+/* CONTACT */
+#contact{padding:7rem 5%;background:var(--bg2);border-top:1px solid var(--border)}
+.contact-wrap{max-width:680px;margin:0 auto;text-align:center}
+.contact-title{font-family:var(--ff-display);font-size:clamp(2.4rem,5vw,4.2rem);font-weight:400;line-height:1.1;margin-bottom:.9rem}
+.contact-title em{font-style:italic;color:var(--maroon-light)}
+.contact-sub{color:var(--text-muted);margin-bottom:2.8rem;font-size:.92rem}
+.contact-btns{display:flex;justify-content:center;gap:.9rem;flex-wrap:wrap;margin-bottom:2.8rem}
+.cbtn{display:flex;align-items:center;gap:.55rem;padding:.8rem 1.65rem;border:1px solid var(--border-md);color:var(--text-muted);font-size:.8rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;background:transparent;transition:all .25s}
+.cbtn:hover{border-color:var(--maroon-light);color:var(--maroon-light)}
+.cbtn.primary{background:var(--maroon);border-color:var(--maroon);color:var(--cream)}
+.cbtn.primary:hover{background:var(--maroon-light);border-color:var(--maroon-light)}
+.divider{display:flex;align-items:center;gap:1rem;color:var(--text-dim);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;margin:2.4rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.cform{display:flex;flex-direction:column;gap:.9rem;text-align:left}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.ff label{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.45rem}
+.ff input,.ff textarea,.ff select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--ff-body);font-size:.88rem;padding:.8rem .95rem;outline:none;transition:border-color .2s;-webkit-appearance:none;border-radius:0}
+.ff input::placeholder,.ff textarea::placeholder{color:var(--text-dim)}
+.ff input:focus,.ff textarea:focus,.ff select:focus{border-color:var(--maroon-light)}
+.ff select option{background:var(--bg3)}
+.ff textarea{resize:vertical;min-height:100px}
+.fsub{padding:.9rem 2.2rem;background:var(--maroon);color:var(--cream);border:none;cursor:pointer;font-family:var(--ff-body);font-size:.78rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;transition:background .25s;align-self:flex-start}
+.fsub:hover{background:var(--maroon-light)}
+
+/* FOOTER */
+footer{padding:1.8rem 5%;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.foot-logo{font-family:var(--ff-display);font-size:1.5rem;font-weight:700;font-style:italic;color:var(--maroon-light);letter-spacing:.02em}
+.foot-copy{font-size:.72rem;color:var(--text-dim)}
+.foot-links{display:flex;gap:1.4rem}
+.foot-links a{font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;color:var(--text-dim);text-decoration:none;transition:color .2s}
+.foot-links a:hover{color:var(--maroon-light)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes scrollPulse{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(18px)}}
+
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  #about{grid-template-columns:1fr}
+  .services-grid{grid-template-columns:1fr 1fr}
+  .svc-audit-inner{grid-template-columns:1fr}
+  .audit-list{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .cases{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr;gap:2rem}
+  .steps::before{display:none}
+  .testi-grid{grid-template-columns:1fr}
+  .frow{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .nav-links{display:none}
+  .hero-stats{display:none}
+  .services-grid{grid-template-columns:1fr}
+  .about-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">Vyne</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#testimonials">Testimonials</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Work With Us</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid-lines"></div>
+  <p class="hero-eyebrow">Social Media Agency — United Kingdom</p>
+  <h1 class="hero-h1">
+    We Build<br>
+    <em>Brands</em> That<br>
+    <span class="outline">Command</span>
+  </h1>
+  <p class="hero-tagline">Turn Clicks into Clients.</p>
+  <p class="hero-desc">Vyne is a premium social media management agency helping businesses across every industry grow their presence, build authority, and convert audiences into paying clients.</p>
+  <div class="hero-btns">
+    <a href="#contact" class="btn-primary">Start Growing Today</a>
+    <a href="#results" class="btn-ghost">See Our Results</a>
+  </div>
+  <div class="hero-stats">
+    <div><div class="stat-num">120<span>+</span></div><div class="stat-label">Brands Managed</div></div>
+    <div><div class="stat-num">£2.4<span>M</span></div><div class="stat-label">Ad Spend Managed</div></div>
+    <div><div class="stat-num">98<span>%</span></div><div class="stat-label">Client Retention</div></div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Social Media Management</span>
+    <span class="marquee-item">Content Creation</span>
+    <span class="marquee-item">Meta &amp; Paid Ads</span>
+    <span class="marquee-item">Brand Strategy</span>
+    <span class="marquee-item">Influencer Marketing</span>
+    <span class="marquee-item">Analytics &amp; Reporting</span>
+    <span class="marquee-item">Social Media Audit</span>
+    <span class="marquee-item">Social Media Management</span>
+    <span class="marquee-item">Content Creation</span>
+    <span class="marquee-item">Meta &amp; Paid Ads</span>
+    <span class="marquee-item">Brand Strategy</span>
+    <span class="marquee-item">Influencer Marketing</span>
+    <span class="marquee-item">Analytics &amp; Reporting</span>
+    <span class="marquee-item">Social Media Audit</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="reveal">
+    <div class="section-tag">Who We Are</div>
+    <h2 class="about-title">A <em>premium agency</em> built for brands that refuse to blend in.</h2>
+    <p class="about-text">At Vyne, we don't believe in one-size-fits-all strategies. We craft tailored social media ecosystems designed around your brand's voice, your audience's behaviour, and your business goals — delivering measurable results that matter.</p>
+    <p class="about-text">Based in the UK and working with clients globally, we bring together strategy, creativity, and data to keep your brand ahead of the curve — consistently.</p>
+    <a href="#services" class="btn-ghost" style="margin-top:1rem">Explore Our Services</a>
+  </div>
+  <div class="about-grid reveal d1">
+    <div class="about-card"><div class="about-icon">◆</div><h4>Strategy First</h4><p>Every campaign starts with deep research and a bespoke roadmap built around your goals.</p></div>
+    <div class="about-card"><div class="about-icon">◈</div><h4>Content That Converts</h4><p>We create content that doesn't just look good — it drives engagement, trust, and sales.</p></div>
+    <div class="about-card"><div class="about-icon">◉</div><h4>Data Driven</h4><p>Monthly reporting with clear KPIs so you always know exactly what your investment returns.</p></div>
+    <div class="about-card"><div class="about-icon">◎</div><h4>Full Transparency</h4><p>No jargon, no hidden fees. You're always in the loop on what we're doing and why.</p></div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="sec-header reveal">
+    <div class="section-tag">What We Do</div>
+    <h2 class="section-title">Seven pillars of <em>social excellence</em></h2>
+  </div>
+  <div class="services-grid">
+    <div class="svc reveal">
+      <div class="svc-num">01</div>
+      <div class="svc-title">Social Media Management</div>
+      <p class="svc-desc">Full-scale management of your Instagram, TikTok, LinkedIn, and more. We handle posting, scheduling, community management, and growth — so you can focus on your business.</p>
+    </div>
+    <div class="svc reveal d1">
+      <div class="svc-num">02</div>
+      <div class="svc-title">Content Creation</div>
+      <p class="svc-desc">Scroll-stopping visuals, reels, carousels, captions, and stories crafted to reflect your brand identity and speak directly to your audience.</p>
+    </div>
+    <div class="svc reveal d2">
+      <div class="svc-num">03</div>
+      <div class="svc-title">Paid Ads &amp; Meta Advertising</div>
+      <p class="svc-desc">Data-backed Meta and Instagram ad campaigns built to maximise ROAS. From targeting to creative to optimisation — every pound managed with precision.</p>
+    </div>
+    <div class="svc reveal">
+      <div class="svc-num">04</div>
+      <div class="svc-title">Brand Strategy</div>
+      <p class="svc-desc">We define your brand's voice, visual identity, positioning, and messaging — giving your social presence a foundation that resonates and builds lasting trust.</p>
+    </div>
+    <div class="svc reveal d1">
+      <div class="svc-num">05</div>
+      <div class="svc-title">Influencer Marketing</div>
+      <p class="svc-desc">We identify, vet, and manage influencer partnerships that align with your brand — from micro-influencers to large creators — ensuring authentic reach and real ROI.</p>
+    </div>
+    <div class="svc reveal d2">
+      <div class="svc-num">06</div>
+      <div class="svc-title">Analytics &amp; Reporting</div>
+      <p class="svc-desc">Clear, honest monthly reports tracking follower growth, engagement, reach, conversions, and ad performance — so you always know what's working and why.</p>
+    </div>
+    <!-- AUDIT — full width, slightly extended -->
+    <div class="svc svc-audit reveal">
+      <div class="svc-audit-inner">
+        <div>
+          <span class="audit-badge">Most Popular</span>
+          <div class="svc-num">07</div>
+          <div class="svc-title">Social Media Audit</div>
+          <p class="svc-desc">Before you grow, you need to know where you stand. Our deep-dive audit gives you a complete picture of your social presence — what's working, what's not, and exactly what to fix. Perfect as a standalone or the starting point for any ongoing partnership.</p>
+        </div>
+        <div>
+          <p style="font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--maroon-light);margin-bottom:.7rem">What's Included</p>
+          <ul class="audit-list">
+            <li>Full SWOT analysis of your social presence</li>
+            <li>Target audience research &amp; persona mapping</li>
+            <li>Competitor analysis (3–5 key rivals)</li>
+            <li>Content performance &amp; engagement breakdown</li>
+            <li>Hashtag strategy &amp; SEO review</li>
+            <li>Brand consistency &amp; visual identity check</li>
+            <li>Visual mockup of a refreshed account layout</li>
+            <li>Bio, highlights &amp; profile optimisation</li>
+            <li>Posting frequency &amp; timing analysis</li>
+            <li>Actionable growth roadmap with quick wins</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="sec-header reveal">
+    <div class="section-tag" style="justify-content:center;color:var(--gold)">Our Impact</div>
+    <h2 class="section-title" style="color:var(--cream)">Numbers that <em>speak for themselves</em></h2>
+  </div>
+  <div class="stats-row reveal">
+    <div class="stat-box"><div class="big-num">120+</div><div class="big-label">Brands Scaled</div></div>
+    <div class="stat-box"><div class="big-num">4.8x</div><div class="big-label">Average ROAS</div></div>
+    <div class="stat-box"><div class="big-num">£2.4M</div><div class="big-label">Ad Spend Managed</div></div>
+    <div class="stat-box"><div class="big-num">98%</div><div class="big-label">Client Retention Rate</div></div>
+  </div>
+  <div class="cases">
+    <div class="case-card reveal">
+      <div class="case-img-wrap">
+        <img
+          src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=700&auto=format&fit=crop&q=70"
+          alt="Fashion brand growth"
+          loading="lazy"
+          onerror="this.parentElement.style.background='#2a0d15'"
+        >
+      </div>
+      <div class="case-body">
+        <div class="case-tag">E-Commerce / Fashion</div>
+        <div class="case-name">LuxeThreads UK</div>
+        <div class="case-stat"><span class="case-num">0 → 42K</span><span class="case-lbl">Instagram followers in 6 months</span></div>
+        <div class="case-stat"><span class="case-num">312%</span><span class="case-lbl">increase in website traffic</span></div>
+        <div class="case-stat"><span class="case-num">5.2x</span><span class="case-lbl">ROAS on Meta Ads</span></div>
+      </div>
+    </div>
+    <div class="case-card reveal d1">
+      <div class="case-img-wrap">
+        <img
+          src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&auto=format&fit=crop&q=70"
+          alt="Restaurant marketing"
+          loading="lazy"
+          onerror="this.parentElement.style.background='#2a0d15'"
+        >
+      </div>
+      <div class="case-body">
+        <div class="case-tag">Hospitality / Restaurant</div>
+        <div class="case-name">Ember &amp; Oak Dining</div>
+        <div class="case-stat"><span class="case-num">8K → 61K</span><span class="case-lbl">followers across platforms</span></div>
+        <div class="case-stat"><span class="case-num">+220%</span><span class="case-lbl">increase in table bookings</span></div>
+        <div class="case-stat"><span class="case-num">£0.32</span><span class="case-lbl">cost per lead via paid ads</span></div>
+      </div>
+    </div>
+    <div class="case-card reveal d2">
+      <div class="case-img-wrap">
+        <img
+          src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=700&auto=format&fit=crop&q=70"
+          alt="Wellness brand growth"
+          loading="lazy"
+          onerror="this.parentElement.style.background='#2a0d15'"
+        >
+      </div>
+      <div class="case-body">
+        <div class="case-tag">Health &amp; Wellness</div>
+        <div class="case-name">Solace Wellness Studio</div>
+        <div class="case-stat"><span class="case-num">1.2K → 28K</span><span class="case-lbl">TikTok followers in 90 days</span></div>
+        <div class="case-stat"><span class="case-num">4.1x</span><span class="case-lbl">ROAS on ad campaigns</span></div>
+        <div class="case-stat"><span class="case-num">180%</span><span class="case-lbl">boost in membership sign-ups</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="sec-header reveal">
+    <div class="section-tag" style="justify-content:center">How We Work</div>
+    <h2 class="section-title">Your journey to <em>social dominance</em></h2>
+  </div>
+  <div class="steps">
+    <div class="step reveal"><div class="step-dot">01</div><div class="step-title">Discovery Call</div><p class="step-desc">We learn your brand, goals, audience, and current challenges inside out.</p></div>
+    <div class="step reveal d1"><div class="step-dot">02</div><div class="step-title">Strategy Build</div><p class="step-desc">A bespoke roadmap tailored to your brand identity and growth objectives.</p></div>
+    <div class="step reveal d2"><div class="step-dot">03</div><div class="step-title">Content Creation</div><p class="step-desc">We produce high-quality content aligned with your strategy and brand voice.</p></div>
+    <div class="step reveal d3"><div class="step-dot">04</div><div class="step-title">Launch &amp; Manage</div><p class="step-desc">We go live, run your accounts daily, and optimise in real time.</p></div>
+    <div class="step reveal d3"><div class="step-dot">05</div><div class="step-title">Report &amp; Refine</div><p class="step-desc">Monthly clear reports. We review, learn, and continuously improve results.</p></div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="sec-header reveal">
+    <div class="section-tag" style="justify-content:center">Client Voices</div>
+    <h2 class="section-title">Trusted by brands <em>across industries</em></h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">Vyne completely transformed our social presence. Within 3 months our Instagram had tripled in engagement and our DMs were full of enquiries. Genuinely outstanding work.</p>
+      <div class="testi-author"><div class="testi-avatar">SH</div><div><div class="testi-name">Sarah H.</div><div class="testi-role">Founder, LuxeThreads UK</div></div></div>
+    </div>
+    <div class="testi-card reveal d1">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">The Meta Ads strategy they built for us delivered a 5x return in the first month. I've worked with other agencies before — Vyne is in a different league entirely.</p>
+      <div class="testi-author"><div class="testi-avatar">JM</div><div><div class="testi-name">James M.</div><div class="testi-role">CEO, Ember &amp; Oak Dining</div></div></div>
+    </div>
+    <div class="testi-card reveal d2">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">Professional, creative, and incredibly responsive. Our TikTok went from 1,200 to 28,000 followers in 3 months. The content quality alone is worth every penny.</p>
+      <div class="testi-author"><div class="testi-avatar">PK</div><div><div class="testi-name">Priya K.</div><div class="testi-role">Director, Solace Wellness</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-wrap">
+    <div class="reveal">
+      <div class="section-tag" style="justify-content:center">Get In Touch</div>
+      <h2 class="contact-title">Ready to <em>grow</em> your brand?</h2>
+      <p class="contact-sub">Let's talk about how Vyne can transform your social media into a revenue-generating machine. Based in the UK — working with clients worldwide.</p>
+    </div>
+    <div class="contact-btns reveal">
+      <a href="https://wa.me/923200083687" class="cbtn primary" target="_blank" rel="noopener">💬&nbsp; WhatsApp Us</a>
+      <a href="https://instagram.com/the.vyne.co" class="cbtn" target="_blank" rel="noopener">📸&nbsp; @the.vyne.co</a>
+      <a href="mailto:vynesocials@gmail.com" class="cbtn">✉&nbsp; vynesocials@gmail.com</a>
+    </div>
+    <div class="divider reveal">Or send us a message</div>
+    <form class="cform reveal" onsubmit="handleForm(event)">
+      <div class="frow">
+        <div class="ff"><label>Your Name</label><input type="text" placeholder="John Smith" required></div>
+        <div class="ff"><label>Your Email</label><input type="email" placeholder="john@yourbrand.com" required></div>
+      </div>
+      <div class="ff"><label>Your Business / Brand</label><input type="text" placeholder="e.g. LuxeThreads UK" required></div>
+      <div class="ff">
+        <label>Service Interested In</label>
+        <select>
+          <option value="">Select a service...</option>
+          <option>Social Media Audit</option>
+          <option>Social Media Management</option>
+          <option>Content Creation</option>
+          <option>Paid Ads / Meta Advertising</option>
+          <option>Brand Strategy</option>
+          <option>Influencer Marketing</option>
+          <option>Analytics &amp; Reporting</option>
+          <option>Full Package</option>
+        </select>
+      </div>
+      <div class="ff"><label>Tell Us About Your Goals</label><textarea placeholder="What are you looking to achieve? What's your current situation? Any targets?" required></textarea></div>
+      <button type="submit" class="fsub">Send Message →</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">Vyne</div>
+  <div class="foot-copy">© 2025 Vyne. All rights reserved. United Kingdom.</div>
+  <div class="foot-links">
+    <a href="#services">Services</a>
+    <a href="#results">Results</a>
+    <a href="#contact">Contact</a>
+  </div>
+</footer>
+
+<script>
+// Custom cursor
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function loop(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)})();
+
+// Scroll reveal
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Active nav
+window.addEventListener('scroll',()=>{
+  let cur='';
+  document.querySelectorAll('section[id]').forEach(s=>{if(window.scrollY>=s.offsetTop-130)cur=s.id});
+  document.querySelectorAll('.nav-links a').forEach(a=>{
+    a.classList.toggle('active',a.getAttribute('href')==='#'+cur);
+  });
+});
+
+// Form
+function handleForm(e){
+  e.preventDefault();
+  const b=e.target.querySelector('.fsub');
+  b.textContent='Message Sent ✓';b.style.background='#1d5c3a';
+  setTimeout(()=>{b.textContent='Send Message →';b.style.background='';e.target.reset()},3500);
+}
+</script>
+</body>
+</html>
